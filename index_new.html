@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>₹1 मिशन</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7f8;color:#222}
+.top{height:4px;background:linear-gradient(90deg,#ff9933 0 33%,#fff 33% 66%,#138808 66%)}
+.page{max-width:500px;margin:auto;padding:18px}
+.card{background:#fff;border-radius:20px;padding:25px 20px;box-shadow:0 8px 28px rgba(0,0,0,.07);text-align:center;animation:open .6s ease;position:relative;overflow:hidden}
+@keyframes open{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.card:before{content:"";position:absolute;inset:-2px;border-radius:22px;padding:2px;background:linear-gradient(90deg,#ff9933,#fff,#138808,#ff9933);background-size:300% 100%;animation:borderMove 4s linear infinite;z-index:0;pointer-events:none;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+.card>*{position:relative;z-index:1}
+@keyframes borderMove{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.logo{font-size:34px;font-weight:bold;margin-bottom:8px}
+h1{font-size:28px;margin:5px 0 10px}
+p{color:#666;line-height:1.55}
+.progress{height:11px;background:#e5e7eb;border-radius:20px;overflow:hidden;margin:20px 0 7px}
+.bar{height:100%;width:0;background:#138808;transition:width .6s ease}
+.count{font-size:13px;color:#777}
+.main-btn,.pay-btn{width:100%;border:0;border-radius:13px;background:#111;color:#fff;padding:15px;font-size:17px;font-weight:bold;cursor:pointer;margin-top:20px}
+.pay-btn:disabled{opacity:.6;cursor:wait}
+.benefit{margin-top:25px;text-align:left;background:#f8faf8;border-radius:15px;padding:17px}
+.benefit h2{font-size:18px;margin:0 0 8px}
+.benefit p{font-size:14px;margin:5px 0}
+.benefit ul{padding-left:19px;margin:8px 0 0;color:#666;font-size:14px;line-height:1.7}
+.note{font-size:13px;color:#777;margin-top:15px}
+footer{text-align:center;color:#999;font-size:11px;padding:18px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px;z-index:9999}
+.modal.show{display:flex}
+.box{position:relative;z-index:10000;background:#fff;width:100%;max-width:400px;border-radius:20px;padding:22px;animation:pop .25s ease;box-shadow:0 15px 45px rgba(0,0,0,.18)}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+label{display:block;text-align:left;font-size:14px;font-weight:bold;margin:12px 0 6px}
+input{width:100%;padding:13px;border:1px solid #ddd;border-radius:11px;font-size:16px}
+.locked{background:#f1f3f5;color:#333;font-weight:bold;cursor:not-allowed}
+.close{width:100%;border:0;background:#eee;border-radius:11px;padding:12px;margin-top:9px}
+.status{font-size:12px;color:#777;text-align:center;margin-top:10px;min-height:16px}
+</style>
+</head>
+<body>
+<div class="top"></div>
+<div class="page">
+<div class="card">
+<div class="logo">₹</div>
+<h1>₹1 मिशन</h1>
+<p>1,00,000 लोगों से ₹1 जमा करने का हमारा छोटा सा मिशन।</p>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="count" id="count">0 / 1,00,000 लोगों ने योगदान दिया</div>
+<button class="main-btn" onclick="openForm()">₹1 योगदान करें</button>
+<div class="benefit">
+<h2>मिशन पूरा होने के बाद</h2>
+<p>1,000 लोगों को इस वेबसाइट पर अपनी प्रोफाइल बनाने का मौका मिलेगा।</p>
+<ul><li>अपना नाम और फोटो</li><li>Instagram और YouTube लिंक</li></ul>
+</div>
+<div class="note">मिशन पूरा होने के बाद इस वेबसाइट को Google Search में लाया जाएगा।</div>
+</div>
+<footer>© 2026 ₹1 मिशन</footer>
+</div>
+
+<div class="modal" id="modal">
+<div class="box">
+<h2>योगदान करें</h2>
+<label for="name">आपका नाम</label>
+<input id="name" type="text" maxlength="100" placeholder="अपना नाम लिखें">
+<label>राशि</label>
+<input class="locked" type="text" value="₹1" readonly>
+<button id="payBtn" class="pay-btn" onclick="payNow()">₹1 Pay करें</button>
+<button class="close" onclick="closeForm()">बंद करें</button>
+<div id="status" class="status"></div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://diqniloscfhusndazssn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_e9YcbSULW6U3pyBbDVeErA_Pkd9NV6c";
+const API = SUPABASE_URL + "/rest/v1/contributions";
+const ORDER_FUNCTION = SUPABASE_URL + "/functions/v1/create-razorpay-order";
+
+function openForm(){
+  document.getElementById("modal").classList.add("show");
+  setTimeout(()=>document.getElementById("name").focus(),100);
+}
+function closeForm(){
+  document.getElementById("modal").classList.remove("show");
+  document.getElementById("status").textContent="";
+}
+
+async function loadCount(){
+  try{
+    const r=await fetch(API+"?select=id&payment_status=eq.paid",{
+      headers:{
+        apikey:SUPABASE_KEY,
+        Authorization:"Bearer "+SUPABASE_KEY,
+        Prefer:"count=exact"
+      }
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const range=r.headers.get("content-range");
+    const n=range && range.includes("/") ? Number(range.split("/")[1])||0 : 0;
+    document.getElementById("count").textContent=n.toLocaleString("en-IN")+" / 1,00,000 लोगों ने योगदान दिया";
+    document.getElementById("bar").style.width=Math.min(n/100000*100,100)+"%";
+  }catch(e){console.error("Count error:",e)}
+}
+
+async function payNow(){
+  const name=document.getElementById("name").value.trim();
+  const btn=document.getElementById("payBtn");
+  const status=document.getElementById("status");
+
+  if(!name){alert("कृपया अपना नाम लिखें।");return;}
+  if(typeof Razorpay==="undefined"){alert("Razorpay Checkout load नहीं हुआ। Internet connection check करें।");return;}
+
+  btn.disabled=true;
+  btn.textContent="Payment खोल रहा है...";
+  status.textContent="Order बनाया जा रहा है...";
+
+  try{
+    const r=await fetch(ORDER_FUNCTION,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey":SUPABASE_KEY
+      },
+      body:JSON.stringify({name:name})
+    });
+
+    const data=await r.json();
+    if(!r.ok || !data.order_id || !data.key_id){
+      throw new Error(data.error || "Razorpay order create नहीं हुआ");
+    }
+
+    const options={
+      key:data.key_id,
+      amount:data.amount,
+      currency:data.currency || "INR",
+      name:"₹1 मिशन",
+      description:"₹1 Mission Contribution",
+      order_id:data.order_id,
+      prefill:{name:name},
+      theme:{color:"#111111"},
+      handler:async function(response){
+        /*
+         * Important: browser callback को अपने-आप paid नहीं मानते।
+         * Razorpay के अनुसार signature verification server-side करना जरूरी है।
+         * इसलिए अभी यह callback सिर्फ verification endpoint को भेजने के लिए तैयार है।
+         */
+        status.textContent="Payment मिला। Verification की जा रही है...";
+
+        try{
+          const vr=await fetch(SUPABASE_URL+"/functions/v1/verify-razorpay-payment",{
+            method:"POST",
+            headers:{
+              "Content-Type":"application/json",
+              "apikey":SUPABASE_KEY
+            },
+            body:JSON.stringify({
+              razorpay_payment_id:response.razorpay_payment_id,
+              razorpay_order_id:response.razorpay_order_id,
+              razorpay_signature:response.razorpay_signature
+            })
+          });
+
+          const result=await vr.json();
+
+          if(!vr.ok || !result.success){
+            throw new Error(result.error || "Payment verification failed");
+          }
+
+          status.textContent="Payment verified successfully.";
+          alert("₹1 payment successfully verified.");
+          document.getElementById("name").value="";
+          await loadCount();
+          closeForm();
+
+        }catch(err){
+          console.error("Verification error:",err);
+          status.textContent="Payment हुआ हो सकता है, लेकिन verification नहीं हुआ।";
+          alert("Payment verification नहीं हो पाई। इसे अभी paid नहीं माना गया है.");
+        }finally{
+          btn.disabled=false;
+          btn.textContent="₹1 Pay करें";
+        }
+      },
+      modal:{
+        ondismiss:function(){
+          status.textContent="";
+          btn.disabled=false;
+          btn.textContent="₹1 Pay करें";
+        }
+      }
+    };
+
+    const rzp=new Razorpay(options);
+
+    rzp.on("payment.failed",function(response){
+      console.error("Razorpay payment failed:",response.error);
+      status.textContent="Payment fail हुआ।";
+      btn.disabled=false;
+      btn.textContent="₹1 Pay करें";
+    });
+
+    rzp.open();
+
+  }catch(e){
+    console.error("Payment error:",e);
+    status.textContent="Payment start नहीं हो पाया।";
+    alert("Payment start नहीं हो पाया.\n\n"+e.message);
+    btn.disabled=false;
+    btn.textContent="₹1 Pay करें";
+  }
+}
+
+loadCount();
+</script>
+</body>
+</html>
