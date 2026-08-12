@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>₹1 मिशन</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7f8;color:#222}
+.top{height:4px;background:linear-gradient(90deg,#ff9933 0 33%,#fff 33% 66%,#138808 66%)}
+.page{max-width:500px;margin:auto;padding:18px}
+.card{background:#fff;border:1px solid #e7ebe7;border-radius:20px;padding:25px 20px;box-shadow:0 8px 28px rgba(0,0,0,.07);text-align:center}
+.money-icon{width:62px;height:42px;margin:0 auto 12px;border:2px solid #138808;border-radius:9px;background:#eaf7ed;color:#138808;display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:800;box-shadow:0 5px 14px rgba(19,136,8,.12);position:relative}
+.money-icon:before{content:"";position:absolute;inset:6px;border:1px solid #72b77c;border-radius:5px}
+h1{font-size:28px;margin:5px 0 10px}
+p{color:#666;line-height:1.55}
+.progress{height:11px;background:#e5e7eb;border-radius:20px;overflow:hidden;margin:20px 0 7px}
+.bar{height:100%;width:0;background:#138808;transition:width .35s ease}
+.count{font-size:13px;color:#777}
+.pay-wrap{margin-top:20px}
+.pay-button{width:100%;height:54px;border:0;border-radius:14px;background:#138808;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;font-size:17px;font-weight:700;box-shadow:0 6px 16px rgba(19,136,8,.20)}
+.pay-button:active{transform:scale(.99)}
+.pay-button:disabled{opacity:.65;cursor:wait}
+.bill-icon{width:30px;height:21px;border:1.7px solid #fff;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;position:relative;line-height:1}
+.bill-icon:before,.bill-icon:after{content:"";position:absolute;width:4px;height:4px;border:1px solid rgba(255,255,255,.8);border-radius:50%}
+.bill-icon:before{left:3px}.bill-icon:after{right:3px}
+.benefit{margin-top:25px;text-align:left;background:#f8faf8;border-radius:15px;padding:17px}
+.benefit h2{font-size:18px;margin:0 0 8px}.benefit p{font-size:14px;margin:5px 0}.benefit ul{padding-left:19px;margin:8px 0 0;color:#666;font-size:14px;line-height:1.7}
+.recent-box{margin-top:22px;text-align:left;background:#fff;border:1px solid #edf0ed;border-radius:16px;padding:15px;box-shadow:0 5px 18px rgba(0,0,0,.04)}
+.recent-title{font-size:14px;font-weight:700;color:#333;margin-bottom:10px}.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-left:5px;vertical-align:1px}
+.recent-names{display:flex;flex-direction:column;gap:7px}.recent-name{display:flex;align-items:center;gap:9px;padding:8px 10px;background:#f8faf8;border-radius:10px;font-size:13px;color:#444}.name-number{width:23px;height:23px;border-radius:50%;background:#e7f4e9;color:#138808;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none}.recent-empty{font-size:13px;color:#999;padding:4px}
+.note{font-size:13px;color:#777;margin-top:15px}footer{text-align:center;color:#999;font-size:11px;padding:18px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:20px;z-index:9999}.modal.show{display:flex}.box{background:#fff;width:100%;max-width:400px;border-radius:20px;padding:22px;box-shadow:0 15px 45px rgba(0,0,0,.18)}
+label{display:block;text-align:left;font-size:14px;font-weight:bold;margin:12px 0 6px}input{width:100%;padding:13px;border:1px solid #ddd;border-radius:11px;font-size:16px}.locked{background:#f1f3f5;color:#333;font-weight:bold;cursor:not-allowed}.pay-btn{width:100%;height:52px;border:0;border-radius:13px;background:#138808;color:#fff;font-size:17px;font-weight:700;margin-top:20px;cursor:pointer}.pay-btn:disabled{opacity:.65;cursor:wait}.close{width:100%;border:0;background:#eee;border-radius:11px;padding:12px;margin-top:9px}.status{font-size:12px;color:#777;text-align:center;margin-top:10px;min-height:16px}
+</style>
+</head>
+<body>
+<div class="top"></div>
+<div class="page">
+<div class="card">
+<div class="money-icon" aria-label="Money">₹</div>
+<h1>₹1 मिशन</h1>
+<p>1,00,000 लोगों से ₹1 जमा करने का हमारा छोटा सा मिशन।</p>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<div class="count" id="count">0 / 1,00,000 लोगों ने योगदान दिया</div>
+<div class="pay-wrap">
+  <button class="pay-button" id="mainPay" onclick="openForm()" aria-label="Pay ₹1">
+    <span class="bill-icon">₹</span><span>Pay ₹1</span>
+  </button>
+</div>
+<div class="benefit">
+<h2>मिशन पूरा होने के बाद</h2>
+<p>1,000 लोगों को इस वेबसाइट पर अपनी प्रोफाइल बनाने का मौका मिलेगा।</p>
+<ul><li>अपना नाम और फोटो</li><li>Instagram और YouTube लिंक</li></ul>
+</div>
+
+<div class="recent-box">
+  <div class="recent-title"><span>हाल ही में Pay करने वाले</span><span class="live-dot"></span></div>
+  <div id="recentNames" class="recent-names">
+    <div class="recent-empty">अभी कोई नाम नहीं</div>
+  </div>
+</div>
+
+<div class="note">मिशन पूरा होने के बाद इस वेबसाइट को Google Search में लाया जाएगा।</div>
+</div>
+<footer>© 2026 ₹1 मिशन</footer>
+</div>
+
+<div class="modal" id="modal">
+<div class="box">
+<h2>योगदान करें</h2>
+<label for="name">आपका नाम</label>
+<input id="name" type="text" maxlength="100" placeholder="अपना नाम लिखें">
+<label>राशि</label>
+<input class="locked" type="text" value="₹1" readonly>
+<button id="payBtn" class="pay-btn" onclick="payNow()">Pay ₹1</button>
+<button class="close" onclick="closeForm()">बंद करें</button>
+<div id="status" class="status"></div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://diqniloscfhusndazssn.supabase.co";
+const SUPABASE_KEY = "sb_publishable_e9YcbSULW6U3pyBbDVeErA_Pkd9NV6c";
+const API = SUPABASE_URL + "/rest/v1/contributions";
+const ORDER_FUNCTION = SUPABASE_URL + "/functions/v1/create-razorpay-order";
+
+function openForm(){
+  document.getElementById("modal").classList.add("show");
+  setTimeout(()=>document.getElementById("name").focus(),100);
+}
+function closeForm(){
+  document.getElementById("modal").classList.remove("show");
+  document.getElementById("status").textContent="";
+}
+
+async function loadRecentNames(){
+  try{
+    const r=await fetch(API+"?select=name,id&payment_status=eq.paid&order=id.desc&limit=5",{
+      headers:{
+        apikey:SUPABASE_KEY,
+        Authorization:"Bearer "+SUPABASE_KEY
+      }
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const rows=await r.json();
+    const box=document.getElementById("recentNames");
+    box.innerHTML="";
+    if(!rows.length){
+      box.innerHTML='<div class="recent-empty">अभी कोई नाम नहीं</div>';
+      return;
+    }
+    rows.slice(0,5).forEach((row,i)=>{
+      const name=(row.name||"Anonymous").trim()||"Anonymous";
+      const item=document.createElement("div");
+      item.className="recent-name";
+      const num=document.createElement("span");
+      num.className="name-number";
+      num.textContent=String(i+1);
+      const text=document.createElement("span");
+      text.textContent=name;
+      item.append(num,text);
+      box.appendChild(item);
+    });
+  }catch(e){
+    console.error("Recent names error:",e);
+  }
+}
+
+async function loadCount(){
+  try{
+    const r=await fetch(API+"?select=id&payment_status=eq.paid",{
+      headers:{
+        apikey:SUPABASE_KEY,
+        Authorization:"Bearer "+SUPABASE_KEY,
+        Prefer:"count=exact"
+      }
+    });
+    if(!r.ok) throw new Error(await r.text());
+    const range=r.headers.get("content-range");
+    const n=range && range.includes("/") ? Number(range.split("/")[1])||0 : 0;
+    document.getElementById("count").textContent=n.toLocaleString("en-IN")+" / 1,00,000 लोगों ने योगदान दिया";
+    document.getElementById("bar").style.width=Math.min(n/100000*100,100)+"%";
+  }catch(e){console.error("Count error:",e)}
+}
+
+async function payNow(){
+  const name=document.getElementById("name").value.trim();
+  const btn=document.getElementById("payBtn");
+  const status=document.getElementById("status");
+
+  if(!name){alert("कृपया अपना नाम लिखें।");return;}
+  if(typeof Razorpay==="undefined"){alert("Razorpay Checkout load नहीं हुआ। Internet connection check करें।");return;}
+
+  btn.disabled=true;
+  btn.textContent="Payment खोल रहा है...";
+  status.textContent="Order बनाया जा रहा है...";
+
+  try{
+    const r=await fetch(ORDER_FUNCTION,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey":SUPABASE_KEY
+      },
+      body:JSON.stringify({name:name})
+    });
+
+    const data=await r.json();
+    if(!r.ok || !data.order_id || !data.key_id){
+      throw new Error(data.error || "Razorpay order create नहीं हुआ");
+    }
+
+    const options={
+      key:data.key_id,
+      amount:data.amount,
+      currency:data.currency || "INR",
+      name:"₹1 मिशन",
+      description:"₹1 Mission Contribution",
+      order_id:data.order_id,
+      prefill:{name:name},
+      theme:{color:"#138808"},
+      handler:async function(response){
+        /*
+         * Important: browser callback को अपने-आप paid नहीं मानते।
+         * Razorpay के अनुसार signature verification server-side करना जरूरी है।
+         * इसलिए अभी यह callback सिर्फ verification endpoint को भेजने के लिए तैयार है।
+         */
+        status.textContent="Payment मिला। Verification की जा रही है...";
+
+        try{
+          const vr=await fetch(SUPABASE_URL+"/functions/v1/verify-razorpay-payment",{
+            method:"POST",
+            headers:{
+              "Content-Type":"application/json",
+              "apikey":SUPABASE_KEY
+            },
+            body:JSON.stringify({
+              razorpay_payment_id:response.razorpay_payment_id,
+              razorpay_order_id:response.razorpay_order_id,
+              razorpay_signature:response.razorpay_signature
+            })
+          });
+
+          const result=await vr.json();
+
+          if(!vr.ok || !result.success){
+            throw new Error(result.error || "Payment verification failed");
+          }
+
+          status.textContent="Payment verified successfully.";
+          alert("₹1 payment successfully verified.");
+          document.getElementById("name").value="";
+          await loadCount();
+          await loadRecentNames();
+          closeForm();
+
+        }catch(err){
+          console.error("Verification error:",err);
+          status.textContent="Payment हुआ हो सकता है, लेकिन verification नहीं हुआ।";
+          alert("Payment verification नहीं हो पाई। इसे अभी paid नहीं माना गया है.");
+        }finally{
+          btn.disabled=false;
+          btn.textContent="Pay ₹1";
+        }
+      },
+      modal:{
+        ondismiss:function(){
+          status.textContent="";
+          btn.disabled=false;
+          btn.textContent="Pay ₹1";
+        }
+      }
+    };
+
+    const rzp=new Razorpay(options);
+
+    rzp.on("payment.failed",function(response){
+      console.error("Razorpay payment failed:",response.error);
+      status.textContent="Payment fail हुआ।";
+      btn.disabled=false;
+      btn.textContent="Pay ₹1";
+    });
+
+    rzp.open();
+
+  }catch(e){
+    console.error("Payment error:",e);
+    status.textContent="Payment start नहीं हो पाया।";
+    alert("Payment start नहीं हो पाया.\n\n"+e.message);
+    btn.disabled=false;
+    btn.textContent="Pay ₹1";
+  }
+}
+
+loadCount();
+loadRecentNames();
+</script>
+</body>
+</html>
