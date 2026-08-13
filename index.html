@@ -99,7 +99,7 @@ function closeForm(){
 
 async function loadRecentNames(){
   try{
-    const r=await fetch(API+"?select=name,id,phone_number&payment_status=eq.paid&order=id.desc&limit=5",{
+    const r=await fetch(API+"?select=name,id,phone_masked&payment_status=eq.paid&order=id.desc&limit=5",{
       headers:{
         apikey:SUPABASE_KEY,
         Authorization:"Bearer "+SUPABASE_KEY
@@ -115,8 +115,8 @@ async function loadRecentNames(){
     }
     rows.slice(0,5).forEach((row,i)=>{
       const name=(row.name||"Anonymous").trim()||"Anonymous";
-      const phone=String(row.phone_number||"");
-      const maskedPhone=phone.length>=5 ? "xxxxx"+phone.slice(-5) : "xxxxx";
+      const maskedPhone=String(row.phone_masked||"xxxxx");
+      
       const item=document.createElement("div");
       item.className="recent-name";
       const num=document.createElement("span");
