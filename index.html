@@ -72,6 +72,8 @@ label{display:block;text-align:left;font-size:14px;font-weight:bold;margin:12px 
 <h2>योगदान करें</h2>
 <label for="name">आपका नाम</label>
 <input id="name" type="text" maxlength="100" placeholder="अपना नाम लिखें">
+<label for="phone">मोबाइल नंबर</label>
+<input id="phone" type="tel" inputmode="numeric" maxlength="10" placeholder="10 अंकों का मोबाइल नंबर">
 <label>राशि</label>
 <input class="locked" type="text" value="₹1" readonly>
 <button id="payBtn" class="pay-btn" onclick="payNow()">Pay ₹1</button>
@@ -97,7 +99,7 @@ function closeForm(){
 
 async function loadRecentNames(){
   try{
-    const r=await fetch(API+"?select=name,id&payment_status=eq.paid&order=id.desc&limit=5",{
+    const r=await fetch(API+"?select=name,phone_number,id&payment_status=eq.paid&order=id.desc&limit=5",{
       headers:{
         apikey:SUPABASE_KEY,
         Authorization:"Bearer "+SUPABASE_KEY
@@ -113,13 +115,15 @@ async function loadRecentNames(){
     }
     rows.slice(0,5).forEach((row,i)=>{
       const name=(row.name||"Anonymous").trim()||"Anonymous";
+      const phone=String(row.phone_number||"").replace(/\\D/g,"");
+      const maskedPhone=phone.length>=5 ? "xxxxx"+phone.slice(-5) : "xxxxx";
       const item=document.createElement("div");
       item.className="recent-name";
       const num=document.createElement("span");
       num.className="name-number";
       num.textContent=String(i+1);
       const text=document.createElement("span");
-      text.textContent=name;
+      text.textContent=name+"  "+maskedPhone;
       item.append(num,text);
       box.appendChild(item);
     });
@@ -147,10 +151,12 @@ async function loadCount(){
 
 async function payNow(){
   const name=document.getElementById("name").value.trim();
+  const phone=document.getElementById("phone").value.replace(/\\D/g,"");
   const btn=document.getElementById("payBtn");
   const status=document.getElementById("status");
 
   if(!name){alert("कृपया अपना नाम लिखें।");return;}
+  if(!/^\\d{10}$/.test(phone)){alert("कृपया सही 10 अंकों का मोबाइल नंबर डालें।");return;}
   if(typeof Razorpay==="undefined"){alert("Razorpay Checkout load नहीं हुआ। Internet connection check करें।");return;}
 
   btn.disabled=true;
@@ -164,7 +170,7 @@ async function payNow(){
         "Content-Type":"application/json",
         "apikey":SUPABASE_KEY
       },
-      body:JSON.stringify({name:name})
+      body:JSON.stringify({name:name, phone_number:phone})
     });
 
     const data=await r.json();
@@ -179,7 +185,7 @@ async function payNow(){
       name:"₹1 मिशन",
       description:"₹1 Mission Contribution",
       order_id:data.order_id,
-      prefill:{name:name},
+      prefill:{name:name, contact:phone},
       theme:{color:"#138808"},
       handler:async function(response){
         /*
@@ -212,6 +218,7 @@ async function payNow(){
           status.textContent="Payment verified successfully.";
           alert("₹1 payment successfully verified.");
           document.getElementById("name").value="";
+          document.getElementById("phone").value="";
           await loadCount();
           await loadRecentNames();
           closeForm();
